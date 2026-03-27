@@ -50,7 +50,7 @@ export const register = async (req, res) => {
       expiresAt: new Date(Date.now() + 10 * 60 * 1000)
     });
 
-    const verifyLink = `${process.env.BASE_URL}/api/auth/verify-email/${emailToken}`;
+    const verifyLink = `https://mes-ioa3.onrender.com/api/auth/verify-email/${emailToken}`;
 
     await sendMail(
       email,
