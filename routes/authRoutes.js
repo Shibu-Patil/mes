@@ -21,7 +21,8 @@ import {
   login,
   verifyOtp,
   verifyEmailLink,
-  updateProfile
+  updateProfile,
+  getUserByEmail
 } from "../controllers/authController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 import upload from "../middleware/upload.js";
@@ -39,6 +40,9 @@ router.put(
   upload.single("profileImage"),
   updateProfile
 );
+
+// Get user by email (for messaging)
+router.get("/find/:email", getUserByEmail);
 
 export default router;
 

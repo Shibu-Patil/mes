@@ -167,7 +167,8 @@ export const login = async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        profileImage: user.profileImage
       }
     });
   } catch (err) {
@@ -212,6 +213,34 @@ export const updateProfile = async (req, res) => {
     await user.save();
 
     res.json({ message: "Profile updated successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/* =========================
+   GET USER BY EMAIL (FOR MESSAGING)
+========================= */
+export const getUserByEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      isEmailVerified: user.isEmailVerified
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
