@@ -36,7 +36,8 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
-  }
+  },
+  maxHttpBufferSize: 100 * 1024 * 1024 // 100MB
 });
 
 // In-memory room state (OK for now)
