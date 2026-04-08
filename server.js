@@ -62,18 +62,33 @@ io.on("connection", (socket) => {
     // Check for pending messages and send them
     const pendingMessages = getPendingMessagesForUser(userId);
     if (pendingMessages.length > 0) {
+      const pendingConversations = {};
+
       pendingMessages.forEach(msg => {
         socket.emit("receive-private-message", {
           id: msg.id,
           fromUserId: msg.fromUserId,
-          fromEmail: msg.toEmail, // This is sender info, adjust as needed
+          fromEmail: msg.fromEmail,
           message: msg.message,
           type: msg.type,
           createdAt: msg.createdAt,
           wasPending: true // Indicate this was a cached message
         });
         markMessageAsDelivered(msg.id);
+
+        if (!pendingConversations[msg.fromUserId]) {
+          pendingConversations[msg.fromUserId] = [];
+        }
+        pendingConversations[msg.fromUserId].push(msg);
       });
+
+      socket.emit("pending-conversations", {
+        conversations: Object.entries(pendingConversations).map(([fromUserId, messages]) => ({
+          fromUserId,
+          messages
+        }))
+      });
+
       console.log(`✅ Delivered ${pendingMessages.length} pending messages to ${userId}`);
     }
     
@@ -115,7 +130,9 @@ io.on("connection", (socket) => {
      ONE-ON-ONE MESSAGING
   ========================= */
   socket.on("send-private-message", ({ fromUserId, toUserId, message, type = "text" }) => {
+
     const recipientSocketId = onlineUsers[toUserId];
+    console.log(recipientSocketId)
     
     if (recipientSocketId) {
       // Send to recipient
@@ -148,11 +165,11 @@ io.on("connection", (socket) => {
   /* =========================
      SEND MESSAGE BY EMAIL (Like WhatsApp)
   ========================= */
-  socket.on("send-message-by-email", async ({ fromUserId, toEmail, message, type = "text" }) => {
+  socket.on("send-message-by-email", async ({ fromUserId, fromEmail, toEmail, message, type = "text" }) => {
     try {
       // Find user by email
       const recipientUser = await User.findOne({ email: toEmail });
-
+      
       if (!recipientUser) {
         socket.emit("message-failed", {
           toEmail,
@@ -188,7 +205,7 @@ io.on("connection", (socket) => {
         console.log(`✅ Message from ${fromUserId} to ${toEmail} delivered instantly`);
       } else {
         // User offline - cache message to file
-        const cachedMsg = addMessageToQueue(fromUserId, toEmail, toUserId, message, type);
+        const cachedMsg = addMessageToQueue(fromUserId, fromEmail, toEmail, toUserId, message, type);
         
         socket.emit("message-sent", {
           toEmail,

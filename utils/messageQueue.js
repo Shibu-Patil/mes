@@ -49,10 +49,11 @@ export const savePendingMessages = () => {
 /* =========================
    ADD MESSAGE TO QUEUE
 ========================= */
-export const addMessageToQueue = (fromUserId, toEmail, toUserId, message, type = "text") => {
+export const addMessageToQueue = (fromUserId, fromEmail, toEmail, toUserId, message, type = "text") => {
   const messageObj = {
     id: Date.now(),
     fromUserId,
+    fromEmail,
     toEmail,
     toUserId,
     message,
